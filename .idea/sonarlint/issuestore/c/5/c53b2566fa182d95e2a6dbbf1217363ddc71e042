@@ -1,9 +1,0 @@
-
-E
-java:S2201"*The return value of "keySet" must be used.(Ÿ­ÿùÿÿÿÿ
-T
-java:S1854V"9Remove this useless assignment to local variable "buses".(Šâ„€üÿÿÿÿ
-E
-java:S1481V"*Remove this unused "buses" local variable.(Šâ„€üÿÿÿÿ
-H
-java:S1144S"3Remove this unused private "listEventBuses" method.(•Ÿ©
