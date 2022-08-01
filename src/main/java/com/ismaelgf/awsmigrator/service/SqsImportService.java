@@ -34,10 +34,14 @@ public class SqsImportService implements AwsImportService {
         .queueUrls()
         .forEach(
             queueUrl -> {
-              var queueSplit = queueUrl.split("/");
-              var queueName = queueSplit[queueSplit.length - 1];
-              log.info("Creating queue: " + queueName);
-              localSqsClient.createQueue(CreateQueueRequest.builder().queueName(queueName).build());
+              try{
+                  var queueSplit = queueUrl.split("/");
+                  var queueName = queueSplit[queueSplit.length - 1];
+                  log.info("Creating queue: " + queueName);
+                  localSqsClient.createQueue(CreateQueueRequest.builder().queueName(queueName).build());
+              } catch (Exception e) {
+                  log.error("An error ocurred when creating the queue {}", queueUrl, e);
+              }
             });
   }
 }

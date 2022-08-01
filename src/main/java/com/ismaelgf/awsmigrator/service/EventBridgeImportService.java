@@ -39,34 +39,42 @@ public class EventBridgeImportService implements AwsImportService {
 
     ruleMap.forEach(
         (rule, targets) -> {
-          var putRuleRequest =
-              PutRuleRequest.builder()
-                  .eventBusName(eventBusName)
-                  .name(rule.name())
-                  .description(rule.description())
-                  .eventPattern(rule.eventPattern())
-                  .roleArn(rule.roleArn())
-                  .build();
-          var targetsRequest =
-              PutTargetsRequest.builder()
-                  .eventBusName(eventBusName)
-                  .rule(rule.name())
-                  .targets(targets)
-                  .build();
-
-          var ruleResponse = localEventBridgeClient.putRule(putRuleRequest);
-          var targetsResponse = localEventBridgeClient.putTargets(targetsRequest);
-
-          log.info(ruleResponse.ruleArn());
-          log.info("Failed target entries: {}", targetsResponse.failedEntries().size());
+            try{
+                createRuleAndTargets(eventBusName, rule, targets);
+            } catch (Exception e) {
+                log.error("Error creating rule {}", rule.name(), e);
+            }
         });
   }
 
-  private String getEventBusName(ApplicationArguments args) {
+    private void createRuleAndTargets(String eventBusName, Rule rule, List<Target> targets) {
+        var putRuleRequest =
+            PutRuleRequest.builder()
+                .eventBusName(eventBusName)
+                .name(rule.name())
+                .description(rule.description())
+                .eventPattern(rule.eventPattern())
+                .roleArn(rule.roleArn())
+                .build();
+        var targetsRequest =
+            PutTargetsRequest.builder()
+                .eventBusName(eventBusName)
+                .rule(rule.name())
+                .targets(targets)
+                .build();
+
+        var ruleResponse = localEventBridgeClient.putRule(putRuleRequest);
+        var targetsResponse = localEventBridgeClient.putTargets(targetsRequest);
+
+        log.info(ruleResponse.ruleArn());
+        log.info("Failed target entries: {}", targetsResponse.failedEntries().size());
+    }
+
+    private String getEventBusName(ApplicationArguments args) {
     var eventBusName = DEFAULT;
-    if (!args.containsOption(EVENT_BUS_NAME)) {
-      log.info("Migrating default eventBus");
+    if (args.containsOption(EVENT_BUS_NAME)) {
       eventBusName = args.getOptionValues(EVENT_BUS_NAME).get(0);
+      log.info("Migrating {} eventBus", eventBusName);
     }
     return eventBusName;
   }
