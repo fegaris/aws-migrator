@@ -39,6 +39,3 @@ java -jar aws-migrator.jar --service-name=sqs
 
 To use this application you need:
 - Java 17
-
-Download latest version:
-[aws-migrator-0.0.1.jar](aws-migrator-0.0.1.jar)
