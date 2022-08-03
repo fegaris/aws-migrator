@@ -4,6 +4,7 @@ import static com.ismaelgf.awsmigrator.constant.Constants.DEFAULT;
 import static com.ismaelgf.awsmigrator.constant.Constants.EVENT_BUS_NAME;
 
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +82,7 @@ public class EventBridgeImportService implements AwsImportService {
     private List<String> getEventBusName(ApplicationArguments args) {
     if (args.containsOption(EVENT_BUS_NAME)) {
       log.info("Migrating {} eventBus", args.containsOption(EVENT_BUS_NAME));
-      args.getOptionValues(EVENT_BUS_NAME);
+      return Arrays.asList(args.getOptionValues(EVENT_BUS_NAME).get(0).split(","));
     }
     return List.of(DEFAULT);
   }
