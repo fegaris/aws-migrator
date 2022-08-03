@@ -1,12 +1,11 @@
 package com.ismaelgf.awsmigrator.service;
 
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.PostConstruct;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor

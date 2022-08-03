@@ -6,6 +6,9 @@ Migrate your aws configuration to your localstack
 
 Services that you can migrate to your local machine
 You only can migrate a service for each execution
+You can migrate multiples services concatenating service-name:
+
+'--service-name=service1 .... --service-name=service2 ....'
 
 **Params**
 
@@ -30,3 +33,12 @@ The service name is **sqs**
 
 Example:
 java -jar aws-migrator.jar --service-name=sqs
+
+
+# Requeriments
+
+To use this application you need:
+- Java 17
+
+Download latest version:
+[aws-migrator-0.0.1.jar](aws-migrator-0.0.1.jar)

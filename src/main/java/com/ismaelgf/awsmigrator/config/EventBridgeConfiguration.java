@@ -1,13 +1,12 @@
 package com.ismaelgf.awsmigrator.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.services.eventbridge.EventBridgeClient;
+import static com.ismaelgf.awsmigrator.constant.Constants.LOCALHOST;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import static com.ismaelgf.awsmigrator.constant.Constants.LOCALHOST;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.services.eventbridge.EventBridgeClient;
 
 @Configuration
 public class EventBridgeConfiguration {
