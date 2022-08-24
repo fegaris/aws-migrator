@@ -12,6 +12,8 @@ public class Constants {
     public static final String SERVICE_NAME = "service-name";
     public static final String SERVICE_NAME_EVENT_BRIDGE = "eventBridge";
     public static final String SERVICE_NAME_SQS = "sqs";
+    public static final String SERVICE_NAME_SFN = "sfn";
+    public static final String SERVICE_NAME_LAMBDA = "lambda";
     /*
     Event bridge
      */

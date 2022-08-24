@@ -76,6 +76,8 @@ public class EventBridgeImportService implements AwsImportService {
         var targetsResponse = localEventBridgeClient.putTargets(targetsRequest);
 
         log.info(ruleResponse.ruleArn());
+        log.info("Pattern: {}", rule.eventPattern());
+        targets.forEach(target -> log.info("Target: {}", target.arn()));
         log.info("Failed target entries: {}", targetsResponse.failedEntries().size());
     }
 
@@ -114,9 +116,8 @@ public class EventBridgeImportService implements AwsImportService {
                       .rule(rule.name())
                       .build());
           ruleMap.put(rule, listTargetsByRule.targets());
-
-          log.info("Rule map loaded");
         });
+    log.info("Rule map loaded");
     return ruleMap;
   }
 }
