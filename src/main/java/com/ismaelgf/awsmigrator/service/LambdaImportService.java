@@ -1,15 +1,24 @@
 package com.ismaelgf.awsmigrator.service;
 
+import static com.ismaelgf.awsmigrator.constant.Constants.LAMBDA_REPLACEMENT;
+
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
+import com.ismaelgf.awsmigrator.service.model.LambdaReplacementType;
+import java.io.IOException;
+import java.net.URL;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.CreateFunctionRequest;
+import software.amazon.awssdk.services.lambda.model.DeleteFunctionRequest;
 import software.amazon.awssdk.services.lambda.model.FunctionCode;
+import software.amazon.awssdk.services.lambda.model.FunctionConfiguration;
 import software.amazon.awssdk.services.lambda.model.GetFunctionRequest;
+import software.amazon.awssdk.services.lambda.model.ResourceNotFoundException;
 
 
 @Slf4j
@@ -30,16 +39,56 @@ public class LambdaImportService implements AwsImportService{
 
   @Override
   public void importService(ApplicationArguments args) {
+    var lambdaReplacementType = getLambdaReplacementType(args);
+
+
 
     lambdaClient.listFunctions().functions().forEach(functionConfiguration -> {
-      var originalLambda = lambdaClient.getFunction(GetFunctionRequest.builder()
-          .functionName(functionConfiguration.functionName()).build());
-//      localLambdaClient.createFunction(CreateFunctionRequest.builder()
-//              .code(originalLambda.code())
-//          .build());
+      log.info("Migrating lambda: {}", functionConfiguration.functionArn());
+
+      if(lambdaReplacementType == LambdaReplacementType.NEW) {
+        deleteIfExists(functionConfiguration);
+      }
+
+      try {
+        var originalLambda = lambdaClient.getFunction(GetFunctionRequest.builder()
+            .functionName(functionConfiguration.functionName()).build());
+
+        var createLambdaResponse = localLambdaClient.createFunction(CreateFunctionRequest.builder()
+                .functionName(functionConfiguration.functionName())
+                .architectures(functionConfiguration.architectures())
+                .description(functionConfiguration.description())
+                .role(functionConfiguration.role())
+                .timeout(functionConfiguration.timeout())
+            .code(FunctionCode.builder()
+                .zipFile(SdkBytes.fromInputStream(new URL(originalLambda.code().location()).openStream())).build())
+            .build());
+        log.info("Created lambda: {}", createLambdaResponse.functionArn());
+      } catch (IOException e) {
+        log.error("Error creating lambda: {}", functionConfiguration.functionArn());
+      }
     });
 
 
 
+  }
+
+  private void deleteIfExists(FunctionConfiguration functionConfiguration) {
+    try{
+      localLambdaClient.getFunction(GetFunctionRequest.builder()
+          .functionName(functionConfiguration.functionName()).build());
+      localLambdaClient.deleteFunction(DeleteFunctionRequest.builder().functionName(
+          functionConfiguration.functionName()).build());
+      log.info("Lambda deleted: {}", functionConfiguration.functionArn());
+    }catch (ResourceNotFoundException resourceNotFoundException){
+      log.debug("Lambda not exists in local: {}", functionConfiguration.functionArn());
+    }
+  }
+
+  private LambdaReplacementType getLambdaReplacementType(ApplicationArguments args) {
+    if (args.containsOption(LAMBDA_REPLACEMENT)) {
+      return LambdaReplacementType.getLambdaReplacementType(args.getOptionValues(LAMBDA_REPLACEMENT).get(0));
+    }
+    return LambdaReplacementType.NEW;
   }
 }

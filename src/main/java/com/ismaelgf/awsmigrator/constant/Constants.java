@@ -20,5 +20,10 @@ public class Constants {
     public static final String DEFAULT = "default";
     public static final String EVENT_BUS_NAME = "event-bus-name";
 
+    /*
+    Lambda
+     */
+    public static final String LAMBDA_REPLACEMENT = "lambda-replacement";
+
 
 }
