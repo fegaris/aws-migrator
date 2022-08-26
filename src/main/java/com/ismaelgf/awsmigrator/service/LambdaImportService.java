@@ -43,7 +43,7 @@ public class LambdaImportService implements AwsImportService {
     var lambdaReplacementType = getLambdaReplacementType(args);
 
     List<FunctionConfiguration> functionConfigurationList = lambdaClient.listFunctions().functions();
-    filters(functionConfigurationList, args)
+    filterLambdas(functionConfigurationList, args)
         .forEach(functionConfiguration -> {
           log.info("Migrating lambda: {}", functionConfiguration.functionArn());
 
@@ -75,7 +75,7 @@ public class LambdaImportService implements AwsImportService {
 
   }
 
-  private List<FunctionConfiguration> filters(List<FunctionConfiguration> list,ApplicationArguments args) {
+  private List<FunctionConfiguration> filterLambdas(List<FunctionConfiguration> list,ApplicationArguments args) {
     return list.stream().filter(functionConfiguration -> {
       if(args.containsOption(LAMBDA_PREFIX)){
         return functionConfiguration.functionName().startsWith(args.getOptionValues(LAMBDA_PREFIX).get(0));
