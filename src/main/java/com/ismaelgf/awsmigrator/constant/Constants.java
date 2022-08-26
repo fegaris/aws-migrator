@@ -24,6 +24,7 @@ public class Constants {
     Lambda
      */
     public static final String LAMBDA_REPLACEMENT = "lambda-replacement";
+    public static final String LAMBDA_PREFIX = "lambda-prefix";
 
 
 }
