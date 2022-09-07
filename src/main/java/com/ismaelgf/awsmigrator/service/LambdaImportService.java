@@ -62,6 +62,9 @@ public class LambdaImportService implements AwsImportService {
                     .description(functionConfiguration.description())
                     .role(functionConfiguration.role())
                     .timeout(functionConfiguration.timeout())
+                    .handler(functionConfiguration.handler())
+                    .runtime(functionConfiguration.runtime())
+                    .publish(true)
                     .code(FunctionCode.builder()
                         .zipFile(SdkBytes.fromInputStream(
                             new URL(originalLambda.code().location()).openStream())).build())

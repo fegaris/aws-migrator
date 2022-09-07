@@ -8,6 +8,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.sfn.SfnClient;
 import software.amazon.awssdk.services.sfn.model.CreateStateMachineRequest;
+import software.amazon.awssdk.services.sfn.model.DescribeStateMachineRequest;
 
 @Slf4j
 @AllArgsConstructor
@@ -28,15 +29,15 @@ public class SfnImportService implements AwsImportService{
   public void importService(ApplicationArguments args) {
     log.info("Migrating step functions");
 
-    //TODO get definition
-
-    sfnClient.listStateMachines().stateMachines().forEach(stateMachineListItem -> {
-      log.info("Sfn arn: {}", stateMachineListItem.stateMachineArn());
+    sfnClient.listStateMachines().stateMachines().forEach(stateMachine -> {
+      log.info("Sfn arn: {}", stateMachine.stateMachineArn());
+      var describeStateMachineResponse =
+          sfnClient.describeStateMachine(DescribeStateMachineRequest.builder().stateMachineArn(stateMachine.stateMachineArn()).build());
       var response = localSfnClient.createStateMachine(CreateStateMachineRequest.builder()
-              .name(stateMachineListItem.name())
-              .roleArn(stateMachineListItem.stateMachineArn())
-              .type(stateMachineListItem.type())
-//              .definition()
+              .name(stateMachine.name())
+              .roleArn(stateMachine.stateMachineArn())
+              .type(stateMachine.type())
+              .definition(describeStateMachineResponse.definition())
           .build());
 
       log.info("Created stateMchine: {}", response.stateMachineArn());
