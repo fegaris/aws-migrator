@@ -13,11 +13,12 @@ import software.amazon.awssdk.services.sfn.model.DescribeStateMachineRequest;
 @Slf4j
 @AllArgsConstructor
 @Service
-public class SfnImportService implements AwsImportService{
+public class SfnImportService implements AwsImportService {
 
   @Qualifier("localSfnClient")
   private final SfnClient localSfnClient;
 
+  @Qualifier("sfnClient")
   private final SfnClient sfnClient;
 
   @Override
@@ -31,16 +32,22 @@ public class SfnImportService implements AwsImportService{
 
     sfnClient.listStateMachines().stateMachines().forEach(stateMachine -> {
       log.info("Sfn arn: {}", stateMachine.stateMachineArn());
-      var describeStateMachineResponse =
-          sfnClient.describeStateMachine(DescribeStateMachineRequest.builder().stateMachineArn(stateMachine.stateMachineArn()).build());
-      var response = localSfnClient.createStateMachine(CreateStateMachineRequest.builder()
-              .name(stateMachine.name())
-              .roleArn(stateMachine.stateMachineArn())
-              .type(stateMachine.type())
-              .definition(describeStateMachineResponse.definition())
-          .build());
+      try {
+        var describeStateMachineResponse =
+            sfnClient.describeStateMachine(DescribeStateMachineRequest.builder()
+                .stateMachineArn(stateMachine.stateMachineArn()).build());
+        var definition = describeStateMachineResponse.definition();
+        var response = localSfnClient.createStateMachine(CreateStateMachineRequest.builder()
+            .name(stateMachine.name())
+            .roleArn(describeStateMachineResponse.roleArn())
+            .type(stateMachine.type())
+            .definition(definition)
+            .build());
 
-      log.info("Created stateMchine: {}", response.stateMachineArn());
+        log.info("Created stateMchine: {}", response.stateMachineArn());
+      } catch (Exception e) {
+        log.error("Error creating the state machine", e);
+      }
     });
 
 

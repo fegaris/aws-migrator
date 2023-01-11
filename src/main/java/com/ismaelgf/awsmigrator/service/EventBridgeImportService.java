@@ -1,6 +1,7 @@
 package com.ismaelgf.awsmigrator.service;
 
 import static com.ismaelgf.awsmigrator.constant.Constants.DEFAULT;
+import static com.ismaelgf.awsmigrator.constant.Constants.EVENT_BRIDGE_ENABLED_FILTER;
 import static com.ismaelgf.awsmigrator.constant.Constants.EVENT_BUS_NAME;
 
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
@@ -22,6 +23,7 @@ import software.amazon.awssdk.services.eventbridge.model.ListTargetsByRuleRespon
 import software.amazon.awssdk.services.eventbridge.model.PutRuleRequest;
 import software.amazon.awssdk.services.eventbridge.model.PutTargetsRequest;
 import software.amazon.awssdk.services.eventbridge.model.Rule;
+import software.amazon.awssdk.services.eventbridge.model.RuleState;
 import software.amazon.awssdk.services.eventbridge.model.Target;
 
 @Slf4j
@@ -40,46 +42,48 @@ public class EventBridgeImportService implements AwsImportService {
   }
 
   public void importService(final ApplicationArguments args) {
-      getEventBusName(args).forEach(this::importEventBus);
+    getEventBusName(args).forEach(eventBusName -> importEventBus(eventBusName, args));
   }
 
-  private void importEventBus(String eventBusName) {
+  private void importEventBus(String eventBusName, ApplicationArguments args) {
     createEventBus(eventBusName);
-    var ruleMap = getRuleListMap(eventBusName);
+    var ruleMap = getRuleListMap(eventBusName, args);
     ruleMap.forEach(
-            (rule, targets) -> {
-                try{
-                    createRuleAndTargets(eventBusName, rule, targets);
-                } catch (Exception e) {
-                    log.error("Error creating rule {}", rule.name(), e);
-                }
-            });
+        (rule, targets) -> {
+          try {
+            createRuleAndTargets(eventBusName, rule, targets);
+          } catch (Exception e) {
+            log.error("Error creating rule {}", rule.name(), e);
+          }
+        });
   }
 
   private void createRuleAndTargets(String eventBusName, Rule rule, List<Target> targets) {
-        var putRuleRequest =
-            PutRuleRequest.builder()
-                .eventBusName(eventBusName)
-                .name(rule.name())
-                .description(rule.description())
-                .eventPattern(rule.eventPattern())
-                .roleArn(rule.roleArn())
-                .build();
-        var targetsRequest =
-            PutTargetsRequest.builder()
-                .eventBusName(eventBusName)
-                .rule(rule.name())
-                .targets(targets)
-                .build();
+    var putRuleRequest =
+        PutRuleRequest.builder()
+            .eventBusName(eventBusName)
+            .name(rule.name())
+            .description(rule.description())
+            .eventPattern(rule.eventPattern())
+            .roleArn(rule.roleArn())
+            .state(rule.state())
+            .build();
+    var targetsRequest =
+        PutTargetsRequest.builder()
+            .eventBusName(eventBusName)
+            .rule(rule.name())
+            .targets(targets)
+            .build();
 
-        var ruleResponse = localEventBridgeClient.putRule(putRuleRequest);
-        var targetsResponse = localEventBridgeClient.putTargets(targetsRequest);
+    var ruleResponse = localEventBridgeClient.putRule(putRuleRequest);
+    var targetsResponse = localEventBridgeClient.putTargets(targetsRequest);
 
-        log.info(ruleResponse.ruleArn());
-        log.info("Pattern: {}", rule.eventPattern());
-        targets.forEach(target -> log.info("Target: {}", target.arn()));
-        log.info("Failed target entries: {}", targetsResponse.failedEntries().size());
-    }
+    log.info(ruleResponse.ruleArn());
+    log.info("Status: {}", rule.state());
+    log.info("Pattern: {}", rule.eventPattern());
+    targets.forEach(target -> log.info("Target: {}", target.arn()));
+    log.info("Failed target entries: {}", targetsResponse.failedEntries().size());
+  }
 
     private List<String> getEventBusName(ApplicationArguments args) {
     if (args.containsOption(EVENT_BUS_NAME)) {
@@ -100,12 +104,12 @@ public class EventBridgeImportService implements AwsImportService {
     }
   }
 
-  private Map<Rule, List<Target>> getRuleListMap(String eventBusName) {
+  private Map<Rule, List<Target>> getRuleListMap(String eventBusName, ApplicationArguments args) {
     final Map<Rule, List<Target>> ruleMap = new HashMap<>();
 
     var response =
         eventBridgeClient.listRules(ListRulesRequest.builder().eventBusName(eventBusName).build());
-    List<Rule> rules = response.rules();
+    List<Rule> rules = filter(response.rules(), args);
 
     rules.forEach(
         rule -> {
@@ -120,4 +124,13 @@ public class EventBridgeImportService implements AwsImportService {
     log.info("Rule map loaded");
     return ruleMap;
   }
+
+  private List<Rule> filter(List<Rule> rules, ApplicationArguments args) {
+    if (args.containsOption(EVENT_BRIDGE_ENABLED_FILTER)) {
+      log.info("Filter enabled rules");
+      return rules.stream().filter(rule -> RuleState.ENABLED == rule.state()).toList();
+    }
+    return rules;
+  }
+
 }

@@ -5,9 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum LambdaReplacementType {
-  NEW("new"),
-  REPLACE("replace"),
-  ONLY_REPLACE("only-replace");
+  NEW("new"),//Delete all
+  REPLACE("replace");
 
   private static final Map<String, LambdaReplacementType> REPLACEMENT_MAP = new HashMap<>();
   private final String replacementType;
