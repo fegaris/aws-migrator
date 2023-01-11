@@ -20,9 +20,10 @@ You can migrate multiples services concatenating service-name:
 
 The service-name is **eventBridge**
 
-| Name           | Mandatory | Description                                                    | Values  |
-|----------------|-----------|----------------------------------------------------------------|---------|
-| event-bus-name | No        | The name of the bus to migrate. The default value is "default" | default |
+| Name                | Mandatory | Description                                                    | Values   |
+|---------------------|-----------|----------------------------------------------------------------|----------|
+| event-bus-name      | No        | The name of the bus to migrate. The default value is "default" | default  |
+| eventbridge-enabled | No        | Import only enabled rules. By default import all rules         | -------- |
 
 Example:
 java -jar aws-migrator.jar --service-name=eventBridge --event-bus-name=default
@@ -31,11 +32,19 @@ java -jar aws-migrator.jar --service-name=eventBridge --event-bus-name=default
 
 The service name is **sqs**
 
+| Name       | Mandatory | Description                            | Values  |
+|------------|-----------|----------------------------------------|---------|
+| sqs-prefix | No        | Import queues that matching the prefix | default |
+
 Example:
 java -jar aws-migrator.jar --service-name=sqs
 
+## Lambda
+//TODO in progress
 
-# Requeriments
+# Requirements
 
 To use this application you need:
+- Localstack
 - Java 17
+- AWS credentials configured

@@ -11,13 +11,13 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 @Configuration
 public class AmazonSqsConfiguration {
 
-  @Bean("localSqsClient")
-  public SqsClient createLocalClient() throws URISyntaxException {
+  @Bean("targetSqsClient")
+  public SqsClient createTargetClient() throws URISyntaxException {
     return SqsClient.builder().endpointOverride(new URI(LOCALHOST)).build();
   }
 
-  @Bean("sqsClient")
-  public SqsClient createClient() {
+  @Bean("sourceSqsClient")
+  public SqsClient createSourceClient() {
     return SqsClient.create();
   }
 }

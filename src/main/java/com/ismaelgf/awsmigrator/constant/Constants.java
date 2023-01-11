@@ -33,6 +33,6 @@ public class Constants {
     /*
     SQS
      */
-    public static final String SQS_PREFIX = "sqs-prefix";
+    public static final String SQS_PREFIX_FILTER = "sqs-prefix";
 
 }

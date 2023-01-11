@@ -1,6 +1,6 @@
 package com.ismaelgf.awsmigrator.service;
 
-import static com.ismaelgf.awsmigrator.constant.Constants.SQS_PREFIX;
+import static com.ismaelgf.awsmigrator.constant.Constants.SQS_PREFIX_FILTER;
 
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
 import java.util.List;
@@ -18,11 +18,11 @@ import software.amazon.awssdk.services.sqs.model.ListQueuesResponse;
 @Slf4j
 public class SqsImportService implements AwsImportService {
 
-  @Qualifier("localSqsClient")
-  private final SqsClient localSqsClient;
+  @Qualifier("targetSqsClient")
+  private final SqsClient targetSqsClient;
 
-  @Qualifier("sqsClient")
-  private final SqsClient sqsClient;
+  @Qualifier("sourceSqsClient")
+  private final SqsClient sourceSqsClient;
 
   @Override
   public AwsImportType getType() {
@@ -32,14 +32,14 @@ public class SqsImportService implements AwsImportService {
   @Override
   public void importService(ApplicationArguments args) {
     log.info("Migrating queues");
-    var queueList = getQueueNames(sqsClient.listQueues(), args);
+    var queueList = getQueueNames(sourceSqsClient.listQueues(), args);
 
     queueList
         .forEach(
             queueName -> {
               try {
                 log.info("Creating queue: " + queueName);
-                localSqsClient.createQueue(
+                targetSqsClient.createQueue(
                     CreateQueueRequest.builder().queueName(queueName).build());
               } catch (Exception e) {
                 log.error("An error occurred when creating the queue {}", queueName, e);
@@ -57,9 +57,9 @@ public class SqsImportService implements AwsImportService {
   }
 
   private List<String> filter(List<String> queueNames, ApplicationArguments args) {
-    if (args.containsOption(SQS_PREFIX)) {
+    if (args.containsOption(SQS_PREFIX_FILTER)) {
       return queueNames.stream()
-          .filter(queueName -> queueName.startsWith(args.getOptionValues(SQS_PREFIX).get(0)))
+          .filter(queueName -> queueName.startsWith(args.getOptionValues(SQS_PREFIX_FILTER).get(0)))
           .toList();
     }
     return queueNames;
