@@ -34,9 +34,31 @@
       <version>${aws.version}</version>
     </dependency>
     <dependency>
+      <artifactId>dynamodb</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <version>${aws.version}</version>
+    </dependency>
+    <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>sts</artifactId>
       <version>${aws.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sfn</artifactId>
+      <version>${aws.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>lambda</artifactId>
+      <version>${aws.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>bom</artifactId>
+      <version>${aws.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -67,6 +89,10 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <properties>
+    <java.version>17</java.version>
+		<aws.version>2.19.8</aws.version>
+  </properties>
 
   <build>
     <plugins>

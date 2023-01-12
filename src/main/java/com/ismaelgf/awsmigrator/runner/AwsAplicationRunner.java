@@ -25,7 +25,7 @@ public class AwsAplicationRunner implements ApplicationRunner {
         if (Objects.nonNull(args.getOptionValues(SERVICE_NAME))) {
             args.getOptionValues(SERVICE_NAME).forEach(serviceName -> {
                 log.info(String.format("Migrating %s", serviceName));
-                awsImportFactory.getAwsImportService(serviceName).importService(args);
+              awsImportFactory.getAwsImportService(serviceName.toLowerCase()).importService(args);
             });
         } else {
             throw new MandatoryParameterNotFound(String.format("%s is a mandatory parameter", SERVICE_NAME));
