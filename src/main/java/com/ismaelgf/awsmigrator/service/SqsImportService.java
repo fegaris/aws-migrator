@@ -4,6 +4,7 @@ import static com.ismaelgf.awsmigrator.constant.Constants.SQS_PREFIX_FILTER;
 
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.ListQueuesResponse;
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 
 @Service
 @AllArgsConstructor
@@ -39,8 +41,14 @@ public class SqsImportService implements AwsImportService {
             queueName -> {
               try {
                 log.info("Creating queue: " + queueName);
-                targetSqsClient.createQueue(
-                    CreateQueueRequest.builder().queueName(queueName).build());
+                if (queueName.contains(".fifo")) {
+                  targetSqsClient.createQueue(
+                      CreateQueueRequest.builder().queueName(queueName).attributes(Map.of(
+                          QueueAttributeName.FIFO_QUEUE, "true")).build());
+                } else {
+                  targetSqsClient.createQueue(
+                      CreateQueueRequest.builder().queueName(queueName).build());
+                }
               } catch (Exception e) {
                 log.error("An error occurred when creating the queue {}", queueName, e);
               }
