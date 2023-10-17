@@ -7,10 +7,12 @@ import static com.ismaelgf.awsmigrator.constant.Constants.LAMBDA_REPLACEMENT;
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
 import com.ismaelgf.awsmigrator.service.model.LambdaReplacementType;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,6 +26,8 @@ import software.amazon.awssdk.services.lambda.model.Environment;
 import software.amazon.awssdk.services.lambda.model.FunctionCode;
 import software.amazon.awssdk.services.lambda.model.FunctionConfiguration;
 import software.amazon.awssdk.services.lambda.model.GetFunctionRequest;
+import software.amazon.awssdk.services.lambda.model.ListFunctionsRequest;
+import software.amazon.awssdk.services.lambda.model.ListFunctionsResponse;
 import software.amazon.awssdk.services.lambda.model.ResourceNotFoundException;
 
 
@@ -47,7 +51,7 @@ public class LambdaImportService implements AwsImportService {
   public void importService(ApplicationArguments args) {
 //    var lambdaReplacementType = getLambdaReplacementType(args);
 
-    List<FunctionConfiguration> functionConfigurationList = lambdaClient.listFunctions().functions();
+    List<FunctionConfiguration> functionConfigurationList = getFunctions();
     filterLambdas(functionConfigurationList, args)
         .forEach(functionConfiguration -> {
           log.info("Migrating lambda: {}", functionConfiguration.functionArn());
@@ -87,13 +91,24 @@ public class LambdaImportService implements AwsImportService {
 
   }
 
+  private List<FunctionConfiguration> getFunctions() {
+    var functions = new ArrayList<FunctionConfiguration>();
+    ListFunctionsResponse response = lambdaClient.listFunctions();
+    functions.addAll(response.functions());
+    while (Objects.nonNull(response.nextMarker())) {
+      response = lambdaClient.listFunctions(ListFunctionsRequest.builder().marker(response.nextMarker()).build());
+      functions.addAll(response.functions());
+    }
+    return functions;
+  }
+
   private Map<String, String> getEnvironmentVariables(ApplicationArguments args) {
     var environmentVariables = new HashMap<String, String>();
     if (args.containsOption(LAMBDA_ENVIRONMENT_VARIABLES)) {
       args.getOptionValues(LAMBDA_ENVIRONMENT_VARIABLES)
           .forEach(environmentArg -> Arrays.stream(environmentArg.split(",")).toList()
               .forEach(envValues -> {
-                var envKeyValue = envValues.split(":");
+                var envKeyValue = envValues.split("->");
                 environmentVariables.put(envKeyValue[0], envKeyValue[1]);
               }));
     }
