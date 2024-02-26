@@ -15,6 +15,7 @@ public class Constants {
     public static final String SERVICE_NAME_SFN = "sfn";
     public static final String SERVICE_NAME_LAMBDA = "lambda";
     public static final String SERVICE_NAME_DYNAMO_DB = "dynamodb";
+    public static final String DYNAMO_DB_PREFIX = "dynamodb-prefix";
     /*
     Event bridge
      */

@@ -1,7 +1,7 @@
 package com.ismaelgf.awsmigrator.service;
 
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.sfn.model.CreateStateMachineRequest;
 import software.amazon.awssdk.services.sfn.model.DescribeStateMachineRequest;
 
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class SfnImportService implements AwsImportService {
 
