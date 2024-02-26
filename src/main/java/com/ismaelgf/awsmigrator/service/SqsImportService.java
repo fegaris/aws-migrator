@@ -5,7 +5,7 @@ import static com.ismaelgf.awsmigrator.constant.Constants.SQS_PREFIX_FILTER;
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
@@ -16,7 +16,7 @@ import software.amazon.awssdk.services.sqs.model.ListQueuesResponse;
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class SqsImportService implements AwsImportService {
 
