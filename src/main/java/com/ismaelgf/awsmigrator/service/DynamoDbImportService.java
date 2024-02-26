@@ -63,7 +63,6 @@ public class DynamoDbImportService implements AwsImportService {
           .build());
     } catch (Exception e) {
       log.error("Error importing table {}", tableName, e);
-      throw e;
     }
   }
 
