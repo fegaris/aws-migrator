@@ -3,12 +3,16 @@ package com.ismaelgf.awsmigrator.service;
 import static com.ismaelgf.awsmigrator.constant.Constants.DEFAULT;
 import static com.ismaelgf.awsmigrator.constant.Constants.EVENT_BRIDGE_ENABLED_FILTER;
 import static com.ismaelgf.awsmigrator.constant.Constants.EVENT_BUS_NAME;
+import static com.ismaelgf.awsmigrator.constant.Constants.LOCAL_ACCOUNT_ID;
 
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -68,11 +72,20 @@ public class EventBridgeImportService implements AwsImportService {
             .roleArn(rule.roleArn())
             .state(rule.state())
             .build();
+    List<Target> newTargets = new ArrayList<>();
+    targets.forEach(
+        target ->
+            newTargets.add(
+                Target.builder()
+                    .id(target.id())
+                    .arn(replaceLocalAccount(target.arn()))
+                    .deadLetterConfig(target.deadLetterConfig())
+                    .build()));
     var targetsRequest =
         PutTargetsRequest.builder()
             .eventBusName(eventBusName)
             .rule(rule.name())
-            .targets(targets)
+            .targets(newTargets)
             .build();
 
     var ruleResponse = localEventBridgeClient.putRule(putRuleRequest);
@@ -85,7 +98,14 @@ public class EventBridgeImportService implements AwsImportService {
     log.info("Failed target entries: {}", targetsResponse.failedEntries().size());
   }
 
-    private List<String> getEventBusName(ApplicationArguments args) {
+  private String replaceLocalAccount(String arn) {
+    Pattern pattern = Pattern.compile("(?<=:)(\\d+)(?=:)");
+    Matcher matcher = pattern.matcher(arn);
+
+    return matcher.replaceAll(LOCAL_ACCOUNT_ID);
+  }
+
+  private List<String> getEventBusName(ApplicationArguments args) {
     if (args.containsOption(EVENT_BUS_NAME)) {
       log.info("Migrating {} eventBus", args.containsOption(EVENT_BUS_NAME));
       return Arrays.asList(args.getOptionValues(EVENT_BUS_NAME).get(0).split(","));
@@ -132,5 +152,4 @@ public class EventBridgeImportService implements AwsImportService {
     }
     return rules;
   }
-
 }
