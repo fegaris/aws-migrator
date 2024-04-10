@@ -37,7 +37,7 @@ public class DynamoDbImportService implements AwsImportService {
   @Override
   public void importService(ApplicationArguments args) {
 
-    getTableNames(args).forEach(tableName -> importTable(tableName));
+    getTableNames(args).forEach(this::importTable);
 
   }
 
@@ -47,19 +47,22 @@ public class DynamoDbImportService implements AwsImportService {
       var describeTableResponse = client.describeTable(
           DescribeTableRequest.builder().tableName(tableName).build());
 
+      var provisionedThroughput = ProvisionedThroughput.builder().readCapacityUnits(1L)
+          .writeCapacityUnits(1L).build();
+
+      var gsi = describeTableResponse.table().globalSecondaryIndexes().stream().map(
+          globalSecondaryIndexDescription -> GlobalSecondaryIndex.builder()
+              .indexName(globalSecondaryIndexDescription.indexName())
+              .keySchema(globalSecondaryIndexDescription.keySchema())
+              .projection(globalSecondaryIndexDescription.projection())
+              .provisionedThroughput(provisionedThroughput)
+              .build()).toList();
+
       localClient.createTable(CreateTableRequest.builder().tableName(tableName)
-          .keySchema(describeTableResponse.table().keySchema()).globalSecondaryIndexes(
-              describeTableResponse.table().globalSecondaryIndexes().stream().map(
-                  globalSecondaryIndexDescription -> GlobalSecondaryIndex.builder()
-                      .indexName(globalSecondaryIndexDescription.indexName())
-                      .keySchema(globalSecondaryIndexDescription.keySchema())
-                      .projection(globalSecondaryIndexDescription.projection())
-                      .provisionedThroughput(ProvisionedThroughput.builder().readCapacityUnits(1L)
-                          .writeCapacityUnits(1L).build())
-                      .build()).toList())
+          .keySchema(describeTableResponse.table().keySchema())
+          .globalSecondaryIndexes(gsi.isEmpty() ? null : gsi)
           .attributeDefinitions(describeTableResponse.table().attributeDefinitions())
-          .provisionedThroughput(
-              ProvisionedThroughput.builder().readCapacityUnits(1L).writeCapacityUnits(1L).build())
+          .provisionedThroughput(provisionedThroughput)
           .build());
     } catch (Exception e) {
       log.error("Error importing table {}", tableName, e);
