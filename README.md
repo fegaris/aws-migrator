@@ -40,7 +40,16 @@ Example:
 java -jar aws-migrator.jar --service-name=sqs
 
 ## Lambda
-//TODO in progress
+
+The service-name is **lambda**
+
+| Name                | Mandatory | Description                                                    | Values   |
+|---------------------|-----------|----------------------------------------------------------------|----------|
+| lambda-prefix      | No        | Import lambdas that matching the prefix | --------  |
+| lambda-variables | No        | Create environment variables for lambdas imported. Format var->value,var2->value2         | -------- |
+
+Example:
+java -jar aws-migrator.jar --service-name=lambda --lambda-prefix dummy-prefix-xxx- lambda-variables var->value,var2->value2
 
 # Requirements
 
