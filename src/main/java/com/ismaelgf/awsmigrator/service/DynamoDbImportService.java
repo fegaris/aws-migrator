@@ -1,10 +1,14 @@
 package com.ismaelgf.awsmigrator.service;
 
+import static com.ismaelgf.awsmigrator.constant.Constants.DYNAMO_DB_IMPORT_DATA;
 import static com.ismaelgf.awsmigrator.constant.Constants.DYNAMO_DB_PREFIX;
 import static com.ismaelgf.awsmigrator.service.model.AwsImportType.DYNAMO_DB;
 
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,11 +20,16 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndex;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesRequest;
 import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class DynamoDbImportService implements AwsImportService {
+
+  Set<String> importDataTableNames = new HashSet<>();
 
   @Qualifier("localDynamoDbClient")
   private final DynamoDbClient localClient;
@@ -37,6 +46,10 @@ public class DynamoDbImportService implements AwsImportService {
   @Override
   public void importService(ApplicationArguments args) {
 
+    if (args.containsOption(DYNAMO_DB_IMPORT_DATA)) {
+      String[] tableNames = args.getOptionValues(DYNAMO_DB_IMPORT_DATA).get(0).split(",");
+      importDataTableNames.addAll(Arrays.asList(tableNames));
+    }
     getTableNames(args).forEach(this::importTable);
 
   }
@@ -64,6 +77,11 @@ public class DynamoDbImportService implements AwsImportService {
           .attributeDefinitions(describeTableResponse.table().attributeDefinitions())
           .provisionedThroughput(provisionedThroughput)
           .build());
+
+      if (importDataTableNames.contains(tableName)) {
+        importData(tableName);
+      }
+
     } catch (Exception e) {
       log.error("Error importing table {}", tableName, e);
     }
@@ -77,6 +95,31 @@ public class DynamoDbImportService implements AwsImportService {
           .tableNames().stream().filter(s -> s.startsWith(prefix)).toList();
     } else {
       return client.listTables(ListTablesRequest.builder().limit(100).build()).tableNames();
+    }
+  }
+
+  private void importData(String tableName) {
+
+    try {
+      log.info("Importing data from table: {}", tableName);
+      ScanRequest scanRequest = ScanRequest.builder()
+          .tableName(tableName)
+          .build();
+
+      ScanResponse scanResponse = client.scan(scanRequest);
+
+      scanResponse.items().forEach(item -> {
+        PutItemRequest putItemRequest = PutItemRequest.builder()
+            .tableName(tableName)
+            .item(item)
+            .build();
+
+        localClient.putItem(putItemRequest);
+      });
+
+      log.info("Data imported successfully from table: {}", tableName);
+    } catch (Exception e) {
+      log.error("Error importing data from table {}", tableName, e);
     }
   }
 }

@@ -6,6 +6,8 @@ public class Constants {
     }
 
     public static final String LOCALHOST = "http://localhost:4566";
+    public static final String LOCALSTACK_ACCOUNT_ID = "000000000000";
+
     /*
         Service names
          */
@@ -16,6 +18,8 @@ public class Constants {
     public static final String SERVICE_NAME_LAMBDA = "lambda";
     public static final String SERVICE_NAME_DYNAMO_DB = "dynamodb";
     public static final String DYNAMO_DB_PREFIX = "dynamodb-prefix";
+    public static final String DYNAMO_DB_IMPORT_DATA = "dynamodb-import-data";
+    public static final String SFN_PREFIX = "sfn-prefix";
     /*
     Event bridge
      */

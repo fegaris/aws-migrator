@@ -3,6 +3,7 @@ package com.ismaelgf.awsmigrator.service;
 import static com.ismaelgf.awsmigrator.constant.Constants.DEFAULT;
 import static com.ismaelgf.awsmigrator.constant.Constants.EVENT_BRIDGE_ENABLED_FILTER;
 import static com.ismaelgf.awsmigrator.constant.Constants.EVENT_BUS_NAME;
+import static com.ismaelgf.awsmigrator.constant.Constants.LOCALSTACK_ACCOUNT_ID;
 
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
 import java.util.Arrays;
@@ -119,7 +120,29 @@ public class EventBridgeImportService implements AwsImportService {
                       .eventBusName(eventBusName)
                       .rule(rule.name())
                       .build());
-          ruleMap.put(rule, listTargetsByRule.targets());
+
+          List<Target> newTargets = listTargetsByRule.targets().stream().map(target ->
+                  Target.builder()
+                      .arn(target.arn().replaceAll("(?<=:)(\\d{12})(?=:)", LOCALSTACK_ACCOUNT_ID))
+                      .id(target.id())
+                      .deadLetterConfig(target.deadLetterConfig())
+                      .sqsParameters(target.sqsParameters())
+                      .input(target.input())
+                      .inputPath(target.inputPath())
+                      .roleArn(target.roleArn())
+                      .ecsParameters(target.ecsParameters())
+                      .batchParameters(target.batchParameters())
+                      .kinesisParameters(target.kinesisParameters())
+                      .httpParameters(target.httpParameters())
+                      .runCommandParameters(target.runCommandParameters())
+                      .redshiftDataParameters(target.redshiftDataParameters())
+                      .sageMakerPipelineParameters(target.sageMakerPipelineParameters())
+                      .inputTransformer(target.inputTransformer())
+                      .retryPolicy(target.retryPolicy())
+                      .build())
+              .toList();
+
+          ruleMap.put(rule, newTargets);
         });
     log.info("Rule map loaded");
     return ruleMap;
