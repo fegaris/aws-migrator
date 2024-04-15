@@ -17,6 +17,10 @@ public class Constants {
     public static final String SERVICE_NAME_DYNAMO_DB = "dynamodb";
     public static final String DYNAMO_DB_PREFIX = "dynamodb-prefix";
     /*
+    User role
+    * */
+    public static final String LOCAL_ACCOUNT_ID = "000000000000";
+    /*
     Event bridge
      */
     public static final String DEFAULT = "default";
