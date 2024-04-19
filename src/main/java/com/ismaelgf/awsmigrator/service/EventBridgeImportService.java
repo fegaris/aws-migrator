@@ -141,7 +141,8 @@ public class EventBridgeImportService implements AwsImportService {
                       .deadLetterConfig(target.deadLetterConfig())
                       .sqsParameters(target.sqsParameters())
                       .input(target.input())
-                      .inputPath(target.inputPath())
+                      .inputPath(target.input() != null ? target.inputPath() : null)
+                      .inputTransformer(target.input() != null ? target.inputTransformer() : null)
                       .roleArn(target.roleArn())
                       .ecsParameters(target.ecsParameters())
                       .batchParameters(target.batchParameters())
@@ -150,8 +151,8 @@ public class EventBridgeImportService implements AwsImportService {
                       .runCommandParameters(target.runCommandParameters())
                       .redshiftDataParameters(target.redshiftDataParameters())
                       .sageMakerPipelineParameters(target.sageMakerPipelineParameters())
-                      .inputTransformer(target.inputTransformer())
                       .retryPolicy(target.retryPolicy())
+                      .appSyncParameters(target.appSyncParameters())
                       .build())
               .toList();
 

@@ -8,6 +8,7 @@ import com.ismaelgf.awsmigrator.service.model.AwsImportType;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndex;
@@ -102,20 +104,29 @@ public class DynamoDbImportService implements AwsImportService {
 
     try {
       log.info("Importing data from table: {}", tableName);
-      ScanRequest scanRequest = ScanRequest.builder()
-          .tableName(tableName)
-          .build();
+      Map<String, AttributeValue> lastEvaluatedKey = null;
 
-      ScanResponse scanResponse = client.scan(scanRequest);
+      do {
+        ScanRequest.Builder scanRequestBuilder = ScanRequest.builder()
+            .tableName(tableName);
 
-      scanResponse.items().forEach(item -> {
-        PutItemRequest putItemRequest = PutItemRequest.builder()
-            .tableName(tableName)
-            .item(item)
-            .build();
+        if (lastEvaluatedKey != null) {
+          scanRequestBuilder.exclusiveStartKey(lastEvaluatedKey);
+        }
 
-        localClient.putItem(putItemRequest);
-      });
+        ScanResponse scanResponse = client.scan(scanRequestBuilder.build());
+
+        scanResponse.items().forEach(item -> {
+          PutItemRequest putItemRequest = PutItemRequest.builder()
+              .tableName(tableName)
+              .item(item)
+              .build();
+
+          localClient.putItem(putItemRequest);
+        });
+
+        lastEvaluatedKey = scanResponse.lastEvaluatedKey();
+      } while (lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty());
 
       log.info("Data imported successfully from table: {}", tableName);
     } catch (Exception e) {
