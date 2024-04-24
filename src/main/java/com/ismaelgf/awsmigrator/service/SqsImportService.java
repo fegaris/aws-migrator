@@ -44,7 +44,8 @@ public class SqsImportService implements AwsImportService {
                 if (queueName.contains(".fifo")) {
                   targetSqsClient.createQueue(
                       CreateQueueRequest.builder().queueName(queueName).attributes(Map.of(
-                          QueueAttributeName.FIFO_QUEUE, "true")).build());
+                          QueueAttributeName.FIFO_QUEUE, "true",
+                          QueueAttributeName.CONTENT_BASED_DEDUPLICATION, "true")).build());
                 } else {
                   targetSqsClient.createQueue(
                       CreateQueueRequest.builder().queueName(queueName).build());
