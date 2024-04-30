@@ -19,6 +19,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.eventbridge.EventBridgeClient;
 import software.amazon.awssdk.services.eventbridge.model.CreateEventBusRequest;
+import software.amazon.awssdk.services.eventbridge.model.DeadLetterConfig;
+import software.amazon.awssdk.services.eventbridge.model.InputTransformer;
 import software.amazon.awssdk.services.eventbridge.model.ListEventBusesRequest;
 import software.amazon.awssdk.services.eventbridge.model.ListRulesRequest;
 import software.amazon.awssdk.services.eventbridge.model.ListTargetsByRuleRequest;
@@ -135,25 +137,14 @@ public class EventBridgeImportService implements AwsImportService {
                       .build());
 
           List<Target> newTargets = listTargetsByRule.targets().stream().map(target ->
-                  Target.builder()
+                  target.toBuilder()
                       .arn(target.arn().replaceAll("(?<=:)(\\d{12})(?=:)", LOCALSTACK_ACCOUNT_ID))
-                      .id(target.id())
-                      .deadLetterConfig(target.deadLetterConfig())
-                      .sqsParameters(target.sqsParameters())
-                      .input(target.input())
-                      .inputPath(target.input() != null ? target.inputPath() : null)
+                      .deadLetterConfig(
+                          DeadLetterConfig.builder().arn(target.deadLetterConfig().arn()
+                              .replaceAll("(?<=:)(\\d{12})(?=:)", LOCALSTACK_ACCOUNT_ID)).build())
                       .inputTransformer(target.input() != null ? target.inputTransformer() : null)
-                      .roleArn(target.roleArn())
-                      .ecsParameters(target.ecsParameters())
-                      .batchParameters(target.batchParameters())
-                      .kinesisParameters(target.kinesisParameters())
-                      .httpParameters(target.httpParameters())
-                      .runCommandParameters(target.runCommandParameters())
-                      .redshiftDataParameters(target.redshiftDataParameters())
-                      .sageMakerPipelineParameters(target.sageMakerPipelineParameters())
-                      .retryPolicy(target.retryPolicy())
-                      .appSyncParameters(target.appSyncParameters())
-                      .build())
+                      .build()
+              )
               .toList();
 
           ruleMap.put(rule, newTargets);
