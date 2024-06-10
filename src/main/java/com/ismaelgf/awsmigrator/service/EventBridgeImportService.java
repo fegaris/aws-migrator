@@ -6,10 +6,12 @@ import static com.ismaelgf.awsmigrator.constant.Constants.EVENT_BUS_NAME;
 import static com.ismaelgf.awsmigrator.constant.Constants.LOCALSTACK_ACCOUNT_ID;
 
 import com.ismaelgf.awsmigrator.service.model.AwsImportType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,6 +33,7 @@ import software.amazon.awssdk.services.eventbridge.model.Target;
 @RequiredArgsConstructor
 @Service
 public class EventBridgeImportService implements AwsImportService {
+
   @Qualifier("eventBridgeClient")
   private final EventBridgeClient eventBridgeClient;
 
@@ -86,7 +89,7 @@ public class EventBridgeImportService implements AwsImportService {
     log.info("Failed target entries: {}", targetsResponse.failedEntries().size());
   }
 
-    private List<String> getEventBusName(ApplicationArguments args) {
+  private List<String> getEventBusName(ApplicationArguments args) {
     if (args.containsOption(EVENT_BUS_NAME)) {
       log.info("Migrating {} eventBus", args.containsOption(EVENT_BUS_NAME));
       return Arrays.asList(args.getOptionValues(EVENT_BUS_NAME).get(0).split(","));
@@ -109,8 +112,18 @@ public class EventBridgeImportService implements AwsImportService {
     final Map<Rule, List<Target>> ruleMap = new HashMap<>();
 
     var response =
-        eventBridgeClient.listRules(ListRulesRequest.builder().eventBusName(eventBusName).build());
-    List<Rule> rules = filter(response.rules(), args);
+        eventBridgeClient.listRules(
+            ListRulesRequest.builder().eventBusName(eventBusName).build());
+    var responseRules = new ArrayList<>(response.rules());
+    while (Objects.nonNull(response.nextToken())) {
+      response =
+          eventBridgeClient.listRules(
+              ListRulesRequest.builder().eventBusName(eventBusName).nextToken(
+                  response.nextToken()).build());
+      responseRules.addAll(response.rules());
+    }
+
+    List<Rule> rules = filter(responseRules, args);
 
     rules.forEach(
         rule -> {
