@@ -16,7 +16,7 @@
   <description>Copy your aws configuration to your localstack</description>
   <properties>
     <java.version>17</java.version>
-    <aws.version>2.26.12</aws.version>
+    <aws.version>2.26.20</aws.version>
   </properties>
   <dependencies>
     <dependency>
